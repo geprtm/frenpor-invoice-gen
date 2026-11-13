@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FREN PRODUCTION - Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #d1d5db;
+        }
+
+        #invoice-paper,
+        #invoice-paper * {
+            font-family: 'Calibri', 'Carlito', 'Segoe UI', Arial, sans-serif;
+        }
+
+        #invoice-paper .invoice-banner-title {
+            font-family: 'Rockwell', 'Courier Prime', 'Georgia', serif !important;
+            font-weight: 900;
+            font-size: 46px;
+            letter-spacing: 3px;
+            color: #ffffff;
+            -webkit-text-stroke: 1.5px #000000;
+            paint-order: stroke fill;
+            line-height: 1;
+        }
+
+        #invoice-paper .header-vendor-title {
+            font-family: Georgia, 'Times New Roman', serif !important;
+        }
+
+        .stamp-overlay {
+            mix-blend-mode: multiply;
+            opacity: 0.88;
+        }
+
+        #invoice-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        #invoice-items-table thead th {
+            background-color: #000000;
+            color: #ffffff;
+            font-weight: 700;
+            text-align: center;
+            padding: 6px 6px;
+            font-size: 13px;
+            border-top: 1px solid #000000;
+            border-bottom: 1px solid #000000;
+            border-right: 1px dotted #ffffff;
+        }
+
+        #invoice-items-table thead th:first-child {
+            border-left: 1px solid #000000;
+        }
+
+        #invoice-items-table thead th:last-child {
+            border-right: 1px solid #000000;
+        }
+
+        #invoice-items-table tbody td {
+            vertical-align: middle;
+            padding: 6px 7px;
+            font-size: 13px;
+            color: #000000;
+            border-right: 1px dotted #000000;
+            border-bottom: 1px dotted #000000;
+            word-wrap: break-word;
+        }
+
+        #invoice-items-table tbody td:first-child {
+            border-left: 1px solid #000000;
+        }
+
+        #invoice-items-table tbody td:last-child {
+            border-right: 1px solid #000000;
+        }
+
+        #invoice-items-table tbody tr:last-child td {
+            border-bottom: 1px solid #000000;
+        }
+
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            html, body {
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                overflow: visible !important;
+            }
+            .no-print,
+            #left-control-panel,
+            #preview-top-bar,
+            #confirm-reset-modal {
+                display: none !important;
+            }
+            #right-preview-panel {
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: #ffffff !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            #paper-scale-container {
+                transform: none !important;
+                width: 210mm !important;
+                margin: 0 !important;
+            }
+            #invoice-paper {
+                width: 210mm !important;
+                min-height: 297mm !important;
+                margin: 0 !important;
+                padding: 12mm 14mm !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 0mm;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row text-slate-800">
+
+    <aside id="left-control-panel" class="no-print w-full md:w-[430px] bg-white md:h-full shadow-xl border-r border-slate-300 flex flex-col z-20 shrink-0">
+        <div class="px-4 py-3.5 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0">
+            <div class="min-w-0">
+                <h1 class="text-sm font-bold tracking-tight truncate">FREN PRODUCTION - Invoice Generator</h1>
+                <p class="text-[11px] text-slate-400">Nota Tagihan & Cetak PDF A4</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" id="btn-open-reset" class="px-2.5 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-semibold transition cursor-pointer">
+                    Reset Default
+                </button>
+                <button type="button" id="btn-print-pdf" class="px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    <span>Cetak / Simpan PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 bg-slate-100 border-b border-slate-200 px-3 pt-2 gap-1.5 shrink-0">
+            <button type="button" id="tab-btn-1" data-tab="1" onclick="switchTab('1')" class="tab-switch-btn py-2.5 px-3 text-xs font-semibold rounded-t-lg border-t border-x border-slate-200 bg-white text-slate-900 transition cursor-pointer">
+                Input Item & Deskripsi
+            </button>
+            <button type="button" id="tab-btn-2" data-tab="2" onclick="switchTab('2')" class="tab-switch-btn py-2.5 px-3 text-xs font-semibold rounded-t-lg border-t border-x border-transparent text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                Info Invoice & Pembayaran
+            </button>
+        </div>
+
+        <div class="p-4 overflow-y-auto flex-1 space-y-5">
+            <div id="tab-panel-1" class="space-y-5">
+                <form id="item-form" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <h2 id="item-form-heading" class="text-xs font-bold uppercase tracking-wider text-slate-700">Tambah Item Baru</h2>
+                        <span id="item-edit-badge" class="hidden px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">Mode Edit</span>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="input-desc" class="text-xs font-semibold text-slate-700">Deskripsi</label>
+                            <button type="button" id="btn-add-subline" class="text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md transition cursor-pointer">
+                                + Tambah Baris Sub-deskripsi
+                            </button>
+                        </div>
+                        <textarea id="input-desc" rows="3" required placeholder="Contoh:&#10;stage tinggi 20cm&#10;ukuran 500x244cm&#10;karpet merah" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="input-qty" class="block text-xs font-semibold text-slate-700 mb-1">Qty</label>
+                            <input type="number" id="input-qty" min="1" step="any" value="1" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        </div>
+                        <div>
+                            <label for="input-unit" class="block text-xs font-semibold text-slate-700 mb-1">Unit</label>
+                            <input type="text" id="input-unit" list="unit-options" value="unit" required placeholder="unit" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                            <datalist id="unit-options">
+                                <option value="unit">
+                                <option value="pcs">
+                                <option value="set">
+                                <option value="paket">
+                                <option value="m2">
+                                <option value="hari">
+                            </datalist>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="input-price" class="block text-xs font-semibold text-slate-700 mb-1">Harga (Rp)</label>
+                            <input type="number" id="input-price" min="0" step="1000" value="0" required placeholder="2000000" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Total Harga (Rp)</label>
+                            <div id="live-item-subtotal" class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-bold text-slate-800 truncate">
+                                Rp 0,00
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="submit" id="btn-submit-item" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg shadow-xs transition cursor-pointer">
+                            + Tambah Item ke Invoice
+                        </button>
+                        <button type="button" id="btn-cancel-edit" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-lg transition cursor-pointer">
+                            Batal Edit
+                        </button>
+                    </div>
+                </form>
+
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Daftar Item Invoice</h2>
+                        <span id="items-count-badge" class="text-[11px] font-semibold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">2 Item</span>
+                    </div>
+                    <div id="editor-items-list" class="space-y-2.5"></div>
+                </div>
+            </div>
+
+            <div id="tab-panel-2" class="hidden space-y-5">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Informasi Nota & Tanda Tangan</h2>
+
+                    <div>
+                        <label for="meta-inv-no" class="block text-xs font-semibold text-slate-700 mb-1">Nomor Invoice</label>
+                        <input type="text" id="meta-inv-no" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                    </div>
+
+                    <div>
+                        <label for="meta-event-title" class="block text-xs font-semibold text-slate-700 mb-1">Judul & Waktu Event</label>
+                        <textarea id="meta-event-title" rows="2" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="meta-place-date" class="block text-xs font-semibold text-slate-700 mb-1">Tempat & Tanggal</label>
+                        <input type="text" id="meta-place-date" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="meta-receiver-label" class="block text-xs font-semibold text-slate-700 mb-1">Label Penerima</label>
+                            <input type="text" id="meta-receiver-label" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        </div>
+                        <div>
+                            <label for="meta-sender-label" class="block text-xs font-semibold text-slate-700 mb-1">Label Hormat Kami</label>
+                            <input type="text" id="meta-sender-label" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="meta-signer-name" class="block text-xs font-semibold text-slate-700 mb-1">Nama Penandatangan</label>
+                        <input type="text" id="meta-signer-name" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                    </div>
+
+                    <div class="pt-1 space-y-2 border-t border-slate-200">
+                        <label class="flex items-center gap-2.5 text-xs font-medium text-slate-700 cursor-pointer select-none">
+                            <input type="checkbox" id="toggle-ttd" checked class="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900">
+                            <span>Tampilkan Tanda Tangan (TTD)</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 text-xs font-medium text-slate-700 cursor-pointer select-none">
+                            <input type="checkbox" id="toggle-stamp" checked class="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-600">
+                            <span>Tampilkan Stempel Merah</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Metode Pembayaran</h2>
+
+                    <div id="payment-methods-list" class="space-y-2"></div>
+
+                    <form id="payment-form" class="pt-2 border-t border-slate-200 space-y-2">
+                        <p id="payment-form-label" class="text-[11px] font-bold text-slate-600">Tambah Rekening Baru</p>
+                        <input type="text" id="pay-bank" placeholder="Nama Bank (misal: BANK BRI)" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        <input type="text" id="pay-detail" placeholder="No. Rekening & Atas Nama" required class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
+                        <div class="flex gap-2">
+                            <button type="submit" id="btn-submit-payment" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2 px-3 rounded-lg transition cursor-pointer">
+                                + Tambah Metode Pembayaran
+                            </button>
+                            <button type="button" id="btn-cancel-payment" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg transition cursor-pointer">
+                                Batal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main id="right-preview-panel" class="flex-1 md:h-full overflow-auto bg-slate-300/80 flex flex-col items-center p-4 md:p-6">
+        <div id="preview-top-bar" class="no-print w-full max-w-[210mm] mb-3 flex items-center justify-between bg-white/90 backdrop-blur-xs px-4 py-2 rounded-xl shadow-xs border border-slate-200 text-xs">
+            <span class="font-semibold text-slate-600">Live Preview Dokumen A4 (210mm × 297mm)</span>
+            <div class="flex items-center gap-1.5">
+                <button type="button" id="btn-zoom-out" class="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 cursor-pointer">−</button>
+                <span id="zoom-level-text" class="px-2 font-semibold text-slate-700 min-w-[46px] text-center">100%</span>
+                <button type="button" id="btn-zoom-in" class="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 cursor-pointer">+</button>
+                <button type="button" id="btn-zoom-fit" class="ml-1 px-2.5 py-1 rounded-md bg-slate-800 text-white font-semibold hover:bg-slate-700 cursor-pointer">Fit</button>
+            </div>
+        </div>
+
+        <div id="paper-scale-container" class="origin-top transition-transform duration-150">
+            <div id="invoice-paper" class="bg-white shadow-2xl text-black" style="width: 210mm; min-height: 297mm; padding: 12mm 14mm;">
+
+                <div style="background-color: #000000; border-radius: 24px; overflow: hidden; position: relative; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between;">
+                    <div aria-hidden="true" style="position: absolute; top: -15px; bottom: -15px; right: 98px; display: flex; transform: skewX(-7deg); z-index: 1; pointer-events: none;">
+                        <div style="width: 24px; height: 100%; background-color: #9ca3af;"></div>
+                        <div style="width: 42px; height: 100%; background-color: #d1d5db;"></div>
+                    </div>
+
+                    <div style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: flex-start;">
+                        <svg width="118" height="74" viewBox="0 0 118 74" style="overflow: visible; display: block;" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <clipPath id="fren-logo-circle-clip">
+                                    <circle cx="37" cy="37" r="35" />
+                                </clipPath>
+                            </defs>
+                            <circle cx="37" cy="37" r="35" fill="#ffffff" />
+                            <path d="M 16 10 L 44 10 C 60 10, 66 19, 66 29.5 C 66 40, 60 49, 44 49 L 27.5 49 L 27.5 67 L 16 61 Z" fill="#000000" />
+                            <path d="M 23.5 16.5 L 42 16.5 L 42 22.5 L 29.5 22.5 L 29.5 28.5 L 38.5 28.5 L 38.5 34 L 29.5 34 L 29.5 49.5 L 23.5 49.5 Z" fill="#ffffff" />
+                            <text x="31.5" y="57.5" fill="#ffffff" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="13.5" letter-spacing="0.2">FREN</text>
+                            <text x="31.5" y="66.5" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="9.2" letter-spacing="0.1">PRODUCTION</text>
+                            <g clip-path="url(#fren-logo-circle-clip)">
+                                <text x="31.5" y="57.5" fill="#000000" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="13.5" letter-spacing="0.2">FREN</text>
+                                <text x="31.5" y="66.5" fill="#000000" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="9.2" letter-spacing="0.1">PRODUCTION</text>
+                            </g>
+                        </svg>
+
+                        <div style="margin-top: 7px; color: #ffffff; line-height: 1.28;">
+                            <div class="header-vendor-title" style="font-weight: 700; font-size: 13px;">Vendor Produksi &amp; Advertising</div>
+                            <div style="font-size: 11.5px; font-weight: 400;">Balikpapan Regency Besakih XIII BM 21</div>
+                            <div style="font-size: 11.5px; font-weight: 400;">HP. 08125866831</div>
+                        </div>
+                    </div>
+
+                    <div style="position: relative; z-index: 10; padding-right: 12px;">
+                        <span class="invoice-banner-title">INVOICE</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px; text-align: right; font-weight: 700; font-size: 13px;">
+                    INVOICE NO: <span id="out-inv-no">0035/IX/2026</span>
+                </div>
+
+                <div id="out-event-title" style="margin-top: 6px; margin-bottom: 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; white-space: pre-line; line-height: 1.3;">VALUES DAY DAN CLOSING SATGAS HAJJ,
+SABTU 12 SEPTEMBER 2026</div>
+
+                <table id="invoice-items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 6%;">No</th>
+                            <th style="width: 44%;">Deskripsi</th>
+                            <th style="width: 8%;">Qty</th>
+                            <th style="width: 10%;">Unit</th>
+                            <th style="width: 16%;">Harga</th>
+                            <th style="width: 16%;">Total Harga</th>
+                        </tr>
+                    </thead>
+                    <tbody id="out-items-tbody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="border: none; background: transparent; padding: 0;"></td>
+                            <td style="background-color: #000000; color: #ffffff; font-weight: 700; text-align: left; padding: 5px 8px; font-size: 13px; border: 1.5px solid #000000;">
+                                Total
+                            </td>
+                            <td style="background-color: #ffffff; color: #000000; font-weight: 700; padding: 5px 8px; font-size: 13px; border: 1.5px solid #000000;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Rp</span>
+                                    <span id="out-grand-total">4.250.000,00</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1; padding-right: 20px; font-weight: 700; font-size: 12.5px; line-height: 1.35; color: #000000; padding-top: 36px;">
+                        <div style="margin-bottom: 2px;">Metode pembayaran :</div>
+                        <div id="out-payment-list"></div>
+                    </div>
+
+                    <div style="width: 370px; display: flex; flex-direction: column; align-items: flex-end;">
+                        <div id="out-place-date" style="font-size: 13px; color: #000000; margin-bottom: 12px; width: 170px; text-align: left; padding-left: 10px;">
+                            Balikpapan 13 September 2026
+                        </div>
+
+                        <div style="width: 100%; display: flex; justify-content: space-between; font-size: 13px; color: #000000;">
+                            <div style="display: flex; flex-direction: column; justify-content: space-between; width: 140px;">
+                                <div id="out-receiver-label">Diterima oleh,</div>
+                                <div style="height: 85px;"></div>
+                                <div style="border-bottom: 1px solid #000000; width: 100%; margin-bottom: 3px;"></div>
+                            </div>
+
+                            <div style="position: relative; display: flex; flex-direction: column; justify-content: space-between; width: 170px;">
+                                <div id="out-sender-label" style="position: relative; z-index: 15; padding-left: 10px;">Hormat Kami</div>
+
+                                <div style="position: relative; height: 85px;">
+                                    <svg id="out-ttd-svg" width="145" height="145" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"
+                                         style="position: absolute; left: 0px; top: -32px; z-index: 10; pointer-events: none;">
+                                        <path d="M 38 128 C 28 85, 24 22, 34 12 C 42 5, 56 42, 68 95 C 78 135, 86 150, 90 154 M 44 68 C 36 52, 52 38, 63 48 C 72 56, 56 76, 48 72 C 56 64, 72 60, 74 68 C 75 74, 65 78, 76 74 C 84 71, 88 76, 94 74 M 34 86 L 78 72"
+                                              stroke="#000000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+
+                                    <svg id="out-stamp-svg" class="stamp-overlay" width="114" height="114" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg"
+                                         style="position: absolute; left: 44px; top: -18px; transform: rotate(-12deg); z-index: 20; pointer-events: none;">
+                                        <defs>
+                                            <filter id="stamp-grunge-filter" x="-10%" y="-10%" width="120%" height="120%">
+                                                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" seed="8" result="noise" />
+                                                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 2.6 -0.85" in="noise" result="texturedNoise" />
+                                                <feComposite in="SourceGraphic" in2="texturedNoise" operator="in" />
+                                            </filter>
+                                            <clipPath id="red-stamp-clip">
+                                                <circle cx="65" cy="65" r="56" />
+                                            </clipPath>
+                                        </defs>
+
+                                        <g filter="url(#stamp-grunge-filter)">
+                                            <circle cx="65" cy="65" r="60" fill="none" stroke="#dc2626" stroke-width="2.5" />
+                                            <circle cx="65" cy="65" r="56" fill="#dc2626" />
+                                            <path d="M 33 24 L 74 24 C 98 24, 108 38, 108 54 C 108 70, 98 84, 74 84 L 50 84 L 50 112 L 33 102 Z" fill="#ffffff" />
+                                            <path d="M 44 34 L 72 34 L 72 43 L 53 43 L 53 52 L 67 52 L 67 60 L 53 60 L 53 85 L 44 85 Z" fill="#dc2626" />
+                                            <g clip-path="url(#red-stamp-clip)">
+                                                <text x="56" y="96" fill="#ffffff" font-family="Arial Black, Impact, sans-serif" font-weight="900" font-size="19.5" letter-spacing="0.3">FREN</text>
+                                                <text x="56" y="109" fill="#ffffff" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="12" letter-spacing="0.2">PRODUCTION</text>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </div>
+
+                                <div id="out-signer-name" style="position: relative; z-index: 15; padding-left: 10px;">Arman Effendy</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div id="confirm-reset-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 border border-slate-200">
+            <div class="space-y-1">
+                <h3 class="text-sm font-bold text-slate-900">Reset ke Pengaturan Awal?</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Semua item dan perubahan info invoice saat ini akan dikembalikan ke data contoh awal FREN PRODUCTION.</p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="btn-close-reset" class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btn-confirm-reset" class="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-xs font-semibold text-white cursor-pointer">
+                    Ya, Reset Default
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            function getDefaultState() {
+                return {
+                    invNo: '0035/IX/2026',
+                    eventTitle: 'VALUES DAY DAN CLOSING SATGAS HAJJ,\nSABTU 12 SEPTEMBER 2026',
+                    placeDate: 'Balikpapan 13 September 2026',
+                    receiverLabel: 'Diterima oleh,',
+                    senderLabel: 'Hormat Kami',
+                    signerName: 'Arman Effendy',
+                    showTtd: true,
+                    showStamp: true,
+                    items: [
+                        {
+                            desc: 'stage tinggi 20cm\nukuran 500x244cm\nkarpet merah',
+                            qty: 1,
+                            unit: 'unit',
+                            price: 2000000
+                        },
+                        {
+                            desc: 'backdrop 500x300',
+                            qty: 1,
+                            unit: 'unit',
+                            price: 2250000
+                        }
+                    ],
+                    payments: [
+                        {
+                            bank: 'BANK BCA',
+                            detail: '1912439610 a/n Arman Effendy'
+                        },
+                        {
+                            bank: 'BANK MANDIRI',
+                            detail: '9000039711628 a/n Arman Effendy'
+                        }
+                    ]
+                };
+            }
+
+            let state = getDefaultState();
+            let editingItemIndex = -1;
+            let editingPaymentIndex = -1;
+            let currentZoom = 1;
+
+            function formatIDRNumber(value) {
+                const num = Number(value) || 0;
+                const fixed = num.toFixed(2);
+                const parts = fixed.split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                return parts.join(',');
+            }
+
+            function escapeHTML(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function updateFormSubtotalPreview() {
+                const qty = parseFloat(document.getElementById('input-qty').value) || 0;
+                const price = parseFloat(document.getElementById('input-price').value) || 0;
+                const subtotal = qty * price;
+                document.getElementById('live-item-subtotal').textContent = 'Rp ' + formatIDRNumber(subtotal);
+            }
+
+            function syncMetaInputsFromState() {
+                document.getElementById('meta-inv-no').value = state.invNo;
+                document.getElementById('meta-event-title').value = state.eventTitle;
+                document.getElementById('meta-place-date').value = state.placeDate;
+                document.getElementById('meta-receiver-label').value = state.receiverLabel;
+                document.getElementById('meta-sender-label').value = state.senderLabel;
+                document.getElementById('meta-signer-name').value = state.signerName;
+                document.getElementById('toggle-ttd').checked = state.showTtd;
+                document.getElementById('toggle-stamp').checked = state.showStamp;
+            }
+
+            function renderEditorItemsList() {
+                const container = document.getElementById('editor-items-list');
+                const badge = document.getElementById('items-count-badge');
+                badge.textContent = state.items.length + ' Item';
+
+                if (state.items.length === 0) {
+                    container.innerHTML = '<div class="text-center py-6 px-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-xs text-slate-500">Belum ada item pada invoice. Silakan tambahkan deskripsi di atas.</div>';
+                    return;
+                }
+
+                container.innerHTML = state.items.map((item, idx) => {
+                    const subtotal = (Number(item.qty) || 0) * (Number(item.price) || 0);
+                    const isEditing = editingItemIndex === idx;
+                    return `
+                        <div class="p-3 rounded-xl border ${isEditing ? 'border-amber-400 bg-amber-50/50' : 'border-slate-200 bg-white'} shadow-2xs space-y-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-start gap-2 min-w-0">
+                                    <span class="shrink-0 w-5 h-5 rounded-md bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center mt-0.5">${idx + 1}</span>
+                                    <div class="text-xs font-medium text-slate-800 whitespace-pre-line break-words">${escapeHTML(item.desc)}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-[11px] text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg">
+                                <span>${item.qty} ${escapeHTML(item.unit)} × Rp ${formatIDRNumber(item.price)}</span>
+                                <span class="font-bold text-slate-900">Rp ${formatIDRNumber(subtotal)}</span>
+                            </div>
+                            <div class="flex items-center justify-end gap-1.5 pt-0.5">
+                                <button type="button" data-action="up" data-index="${idx}" ${idx === 0 ? 'disabled' : ''} class="px-2 py-1 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 cursor-pointer">Naik</button>
+                                <button type="button" data-action="down" data-index="${idx}" ${idx === state.items.length - 1 ? 'disabled' : ''} class="px-2 py-1 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 cursor-pointer">Turun</button>
+                                <button type="button" data-action="edit" data-index="${idx}" class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 cursor-pointer">Edit</button>
+                                <button type="button" data-action="delete" data-index="${idx}" class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-red-50 hover:bg-red-100 text-red-600 cursor-pointer">Hapus</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function renderEditorPaymentsList() {
+                const container = document.getElementById('payment-methods-list');
+                if (state.payments.length === 0) {
+                    container.innerHTML = '<div class="text-xs text-slate-500 italic">Belum ada metode pembayaran.</div>';
+                    return;
+                }
+
+                container.innerHTML = state.payments.map((pay, idx) => `
+                    <div class="p-2.5 rounded-lg border border-slate-200 bg-white flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-slate-800 truncate">${escapeHTML(pay.bank)}</div>
+                            <div class="text-[11px] text-slate-600 truncate">${escapeHTML(pay.detail)}</div>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" data-pay-action="edit" data-index="${idx}" class="px-2 py-1 rounded-md text-[11px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 cursor-pointer">Edit</button>
+                            <button type="button" data-pay-action="delete" data-index="${idx}" class="px-2 py-1 rounded-md text-[11px] font-semibold bg-red-50 hover:bg-red-100 text-red-600 cursor-pointer">Hapus</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderInvoicePreview() {
+                document.getElementById('out-inv-no').textContent = state.invNo;
+                document.getElementById('out-event-title').textContent = state.eventTitle;
+                document.getElementById('out-place-date').textContent = state.placeDate;
+                document.getElementById('out-receiver-label').textContent = state.receiverLabel;
+                document.getElementById('out-sender-label').textContent = state.senderLabel;
+                document.getElementById('out-signer-name').textContent = state.signerName;
+
+                document.getElementById('out-ttd-svg').style.display = state.showTtd ? 'block' : 'none';
+                document.getElementById('out-stamp-svg').style.display = state.showStamp ? 'block' : 'none';
+
+                const tbody = document.getElementById('out-items-tbody');
+                let grandTotal = 0;
+
+                if (state.items.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 14px; color: #6b7280; font-style: italic;">
+                                (Belum ada item ditambahkan)
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = state.items.map((item, index) => {
+                        const qty = Number(item.qty) || 0;
+                        const price = Number(item.price) || 0;
+                        const subtotal = qty * price;
+                        grandTotal += subtotal;
+
+                        return `
+                            <tr>
+                                <td style="text-align: center; vertical-align: middle;">${index + 1}</td>
+                                <td style="text-align: left; vertical-align: middle; white-space: pre-line; line-height: 1.35;">${escapeHTML(item.desc)}</td>
+                                <td style="text-align: center; vertical-align: middle;">${qty}</td>
+                                <td style="text-align: center; vertical-align: middle;">${escapeHTML(item.unit)}</td>
+                                <td style="vertical-align: middle;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>Rp</span>
+                                        <span>${formatIDRNumber(price)}</span>
+                                    </div>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span>Rp</span>
+                                        <span>${formatIDRNumber(subtotal)}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                document.getElementById('out-grand-total').textContent = formatIDRNumber(grandTotal);
+
+                const payContainer = document.getElementById('out-payment-list');
+                payContainer.innerHTML = state.payments.map((pay) => `
+                    <div style="margin-bottom: 2px;">
+                        <div style="display: flex; align-items: baseline;">
+                            <span style="display: inline-block; width: 18px;">-</span>
+                            <span>${escapeHTML(pay.bank)}</span>
+                        </div>
+                        <div style="padding-left: 18px;">${escapeHTML(pay.detail)}</div>
+                    </div>
+                `).join('');
+            }
+
+            function renderAll() {
+                renderEditorItemsList();
+                renderEditorPaymentsList();
+                renderInvoicePreview();
+            }
+
+            function resetItemForm() {
+                editingItemIndex = -1;
+                document.getElementById('item-form').reset();
+                document.getElementById('input-qty').value = 1;
+                document.getElementById('input-unit').value = 'unit';
+                document.getElementById('input-price').value = 0;
+                document.getElementById('item-form-heading').textContent = 'Tambah Item Baru';
+                document.getElementById('item-edit-badge').classList.add('hidden');
+                document.getElementById('btn-submit-item').textContent = '+ Tambah Item ke Invoice';
+                document.getElementById('btn-cancel-edit').classList.add('hidden');
+                updateFormSubtotalPreview();
+                renderEditorItemsList();
+            }
+
+            function resetPaymentForm() {
+                editingPaymentIndex = -1;
+                document.getElementById('payment-form').reset();
+                document.getElementById('payment-form-label').textContent = 'Tambah Rekening Baru';
+                document.getElementById('btn-submit-payment').textContent = '+ Tambah Metode Pembayaran';
+                document.getElementById('btn-cancel-payment').classList.add('hidden');
+            }
+
+            function setZoom(scale) {
+                currentZoom = Math.max(0.4, Math.min(1.3, scale));
+                const container = document.getElementById('paper-scale-container');
+                container.style.transform = `scale(${currentZoom})`;
+                document.getElementById('zoom-level-text').textContent = Math.round(currentZoom * 100) + '%';
+            }
+
+            function fitPreviewToViewport() {
+                const panel = document.getElementById('right-preview-panel');
+                if (!panel) return;
+                const availableWidth = panel.clientWidth - 48;
+                const paperWidth = 794;
+                
+                if (availableWidth > 0 && availableWidth < paperWidth) {
+                    setZoom(availableWidth / paperWidth);
+                } else {
+                    setZoom(1);
+                }
+            }
+
+            window.switchTab = function (tabInput) {
+                const raw = String(tabInput || '1');
+                const tabId = raw.includes('2') ? '2' : '1';
+
+                document.querySelectorAll('.tab-switch-btn').forEach((b) => {
+                    const isTarget = b.getAttribute('data-tab') === tabId;
+                    if (isTarget) {
+                        b.classList.add('bg-white', 'text-slate-900', 'border-slate-200');
+                        b.classList.remove('text-slate-500', 'border-transparent');
+                    } else {
+                        b.classList.remove('bg-white', 'text-slate-900', 'border-slate-200');
+                        b.classList.add('text-slate-500', 'border-transparent');
+                    }
+                });
+
+                const panel1 = document.getElementById('tab-panel-1');
+                const panel2 = document.getElementById('tab-panel-2');
+                if (panel1) panel1.classList.toggle('hidden', tabId !== '1');
+                if (panel2) panel2.classList.toggle('hidden', tabId !== '2');
+            };
+
+            document.querySelectorAll('.tab-switch-btn').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    window.switchTab(btn.getAttribute('data-tab'));
+                });
+            });
+
+            document.getElementById('btn-add-subline').addEventListener('click', () => {
+                const textarea = document.getElementById('input-desc');
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+                textarea.value = text.substring(0, start) + '\n' + text.substring(end);
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
+            });
+
+            document.getElementById('input-qty').addEventListener('input', updateFormSubtotalPreview);
+            document.getElementById('input-price').addEventListener('input', updateFormSubtotalPreview);
+
+            document.getElementById('item-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const desc = document.getElementById('input-desc').value.trim();
+                const qty = parseFloat(document.getElementById('input-qty').value) || 1;
+                const unit = document.getElementById('input-unit').value.trim() || 'unit';
+                const price = parseFloat(document.getElementById('input-price').value) || 0;
+
+                if (!desc) return;
+
+                if (editingItemIndex >= 0) {
+                    state.items[editingItemIndex] = { desc, qty, unit, price };
+                } else {
+                    state.items.push({ desc, qty, unit, price });
+                }
+
+                resetItemForm();
+                renderAll();
+            });
+
+            document.getElementById('btn-cancel-edit').addEventListener('click', resetItemForm);
+
+            document.getElementById('editor-items-list').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const action = btn.getAttribute('data-action');
+                const idx = parseInt(btn.getAttribute('data-index'), 10);
+
+                if (action === 'up' && idx > 0) {
+                    const temp = state.items[idx - 1];
+                    state.items[idx - 1] = state.items[idx];
+                    state.items[idx] = temp;
+                    if (editingItemIndex === idx) editingItemIndex = idx - 1;
+                    renderAll();
+                } else if (action === 'down' && idx < state.items.length - 1) {
+                    const temp = state.items[idx + 1];
+                    state.items[idx + 1] = state.items[idx];
+                    state.items[idx] = temp;
+                    if (editingItemIndex === idx) editingItemIndex = idx + 1;
+                    renderAll();
+                } else if (action === 'edit') {
+                    const item = state.items[idx];
+                    editingItemIndex = idx;
+                    document.getElementById('input-desc').value = item.desc;
+                    document.getElementById('input-qty').value = item.qty;
+                    document.getElementById('input-unit').value = item.unit;
+                    document.getElementById('input-price').value = item.price;
+                    document.getElementById('item-form-heading').textContent = 'Edit Item #' + (idx + 1);
+                    document.getElementById('item-edit-badge').classList.remove('hidden');
+                    document.getElementById('btn-submit-item').textContent = 'Simpan Perubahan';
+                    document.getElementById('btn-cancel-edit').classList.remove('hidden');
+                    updateFormSubtotalPreview();
+                    renderEditorItemsList();
+                    document.getElementById('input-desc').focus();
+                } else if (action === 'delete') {
+                    state.items.splice(idx, 1);
+                    if (editingItemIndex === idx) {
+                        resetItemForm();
+                    } else if (editingItemIndex > idx) {
+                        editingItemIndex--;
+                    }
+                    renderAll();
+                }
+            });
+
+            const metaBindings = [
+                { id: 'meta-inv-no', key: 'invNo' },
+                { id: 'meta-event-title', key: 'eventTitle' },
+                { id: 'meta-place-date', key: 'placeDate' },
+                { id: 'meta-receiver-label', key: 'receiverLabel' },
+                { id: 'meta-sender-label', key: 'senderLabel' },
+                { id: 'meta-signer-name', key: 'signerName' }
+            ];
+
+            metaBindings.forEach(({ id, key }) => {
+                document.getElementById(id).addEventListener('input', (e) => {
+                    state[key] = e.target.value;
+                    renderInvoicePreview();
+                });
+            });
+
+            document.getElementById('toggle-ttd').addEventListener('change', (e) => {
+                state.showTtd = e.target.checked;
+                renderInvoicePreview();
+            });
+
+            document.getElementById('toggle-stamp').addEventListener('change', (e) => {
+                state.showStamp = e.target.checked;
+                renderInvoicePreview();
+            });
+
+            document.getElementById('payment-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const bank = document.getElementById('pay-bank').value.trim();
+                const detail = document.getElementById('pay-detail').value.trim();
+                if (!bank || !detail) return;
+
+                if (editingPaymentIndex >= 0) {
+                    state.payments[editingPaymentIndex] = { bank, detail };
+                } else {
+                    state.payments.push({ bank, detail });
+                }
+                resetPaymentForm();
+                renderAll();
+            });
+
+            document.getElementById('btn-cancel-payment').addEventListener('click', resetPaymentForm);
+
+            document.getElementById('payment-methods-list').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-pay-action]');
+                if (!btn) return;
+                const action = btn.getAttribute('data-pay-action');
+                const idx = parseInt(btn.getAttribute('data-index'), 10);
+
+                if (action === 'edit') {
+                    const pay = state.payments[idx];
+                    editingPaymentIndex = idx;
+                    document.getElementById('pay-bank').value = pay.bank;
+                    document.getElementById('pay-detail').value = pay.detail;
+                    document.getElementById('payment-form-label').textContent = 'Edit Metode Pembayaran';
+                    document.getElementById('btn-submit-payment').textContent = 'Simpan Perubahan';
+                    document.getElementById('btn-cancel-payment').classList.remove('hidden');
+                } else if (action === 'delete') {
+                    state.payments.splice(idx, 1);
+                    if (editingPaymentIndex === idx) resetPaymentForm();
+                    renderAll();
+                }
+            });
+
+            document.getElementById('btn-print-pdf').addEventListener('click', () => {
+                window.print();
+            });
+
+            const resetModal = document.getElementById('confirm-reset-modal');
+            document.getElementById('btn-open-reset').addEventListener('click', () => {
+                resetModal.classList.remove('hidden');
+            });
+            document.getElementById('btn-close-reset').addEventListener('click', () => {
+                resetModal.classList.add('hidden');
+            });
+            document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+                state = getDefaultState();
+                resetItemForm();
+                resetPaymentForm();
+                syncMetaInputsFromState();
+                renderAll();
+                resetModal.classList.add('hidden');
+            });
+
+            document.getElementById('btn-zoom-in').addEventListener('click', () => setZoom(currentZoom + 0.1));
+            document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(currentZoom - 0.1));
+            document.getElementById('btn-zoom-fit').addEventListener('click', fitPreviewToViewport);
+            window.addEventListener('resize', fitPreviewToViewport);
+
+            syncMetaInputsFromState();
+            updateFormSubtotalPreview();
+            renderAll();
+            fitPreviewToViewport();
+        })();
+    </script>
+</body>
+</html>
