@@ -388,34 +388,51 @@ SABTU 12 SEPTEMBER 2026</div>
                     </tfoot>
                 </table>
 
-                <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="flex: 1; padding-right: 20px; font-weight: 700; font-size: 12.5px; line-height: 1.35; color: #000000; padding-top: 36px;">
-                        <div style="margin-bottom: 2px;">Metode pembayaran :</div>
-                        <div id="out-payment-list"></div>
+                <!-- D. BAGIAN BAWAH: METODE PEMBAYARAN & TANDA TANGAN -->
+                <div style="margin-top: 12px;">
+                    
+                    <!-- Baris Tanggal Mentok Kanan (Satu Baris Saja) -->
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
+                        <div style="width: 370px; display: flex; justify-content: flex-end;">
+                            <div id="out-place-date" style="font-size: 13px; color: #000000; width: 170px; text-align: left; padding-left: 10px; white-space: nowrap;">
+                                Balikpapan 13 September 2026
+                            </div>
+                        </div>
                     </div>
 
-                    <div style="width: 370px; display: flex; flex-direction: column; align-items: flex-end;">
-                        <div id="out-place-date" style="font-size: 13px; color: #000000; margin-bottom: 12px; width: 170px; text-align: left; padding-left: 10px;">
-                            Balikpapan 13 September 2026
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        
+                        <!-- Kolom Kiri: Metode Pembayaran (Sejajar horizontal dengan Diterima oleh) -->
+                        <div style="flex: 1; padding-right: 20px; font-weight: 700; font-size: 12.5px; line-height: 1.35; color: #000000;">
+                            <div style="margin-bottom: 2px;">Metode pembayaran :</div>
+                            <div id="out-payment-list"></div>
                         </div>
 
-                        <div style="width: 100%; display: flex; justify-content: space-between; font-size: 13px; color: #000000;">
+                        <!-- Kolom Kanan: Blok Tanda Tangan -->
+                        <div style="width: 370px; display: flex; justify-content: space-between; font-size: 13px; color: #000000;">
+                            
+                            <!-- Diterima oleh -->
                             <div style="display: flex; flex-direction: column; justify-content: space-between; width: 140px;">
                                 <div id="out-receiver-label">Diterima oleh,</div>
                                 <div style="height: 85px;"></div>
                                 <div style="border-bottom: 1px solid #000000; width: 100%; margin-bottom: 3px;"></div>
                             </div>
 
+                            <!-- Hormat Kami -->
                             <div style="position: relative; display: flex; flex-direction: column; justify-content: space-between; width: 170px;">
                                 <div id="out-sender-label" style="position: relative; z-index: 15; padding-left: 10px;">Hormat Kami</div>
 
+                                <!-- Area Visual TTD & Stempel -->
                                 <div style="position: relative; height: 85px;">
+                                    
+                                    <!-- LAYER BAWAH (z-index: 10): Tanda Tangan Tinta Hitam -->
                                     <svg id="out-ttd-svg" width="145" height="145" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"
                                          style="position: absolute; left: 0px; top: -32px; z-index: 10; pointer-events: none;">
                                         <path d="M 38 128 C 28 85, 24 22, 34 12 C 42 5, 56 42, 68 95 C 78 135, 86 150, 90 154 M 44 68 C 36 52, 52 38, 63 48 C 72 56, 56 76, 48 72 C 56 64, 72 60, 74 68 C 75 74, 65 78, 76 74 C 84 71, 88 76, 94 74 M 34 86 L 78 72"
                                               stroke="#000000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
 
+                                    <!-- LAYER ATAS (z-index: 20): Stempel Merah FREN PRODUCTION Menimpa TTD -->
                                     <svg id="out-stamp-svg" class="stamp-overlay" width="114" height="114" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg"
                                          style="position: absolute; left: 44px; top: -18px; transform: rotate(-12deg); z-index: 20; pointer-events: none;">
                                         <defs>
@@ -442,6 +459,7 @@ SABTU 12 SEPTEMBER 2026</div>
                                     </svg>
                                 </div>
 
+                                <!-- Nama Penandatangan -->
                                 <div id="out-signer-name" style="position: relative; z-index: 15; padding-left: 10px;">Arman Effendy</div>
                             </div>
                         </div>
